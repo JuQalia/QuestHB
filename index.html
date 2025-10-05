@@ -1,0 +1,234 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Квест</title>
+<style>
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(to right, #f0f0f0, #e0e0ff);
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+.container {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+}
+button, input[type="text"], input[type="number"] {
+    padding: 10px 20px;
+    margin: 10px;
+    font-size: 16px;
+}
+.card {
+    display: inline-block;
+    width: 150px;
+    height: 150px;
+    margin: 10px;
+    perspective: 1000px;
+}
+.card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.8s;
+    transform-style: preserve-3d;
+}
+.card.flipped .card-inner {
+    transform: rotateY(180deg);
+}
+.card-front, .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    box-sizing: border-box;
+}
+.card-front {
+    font-size: 40px;
+}
+.card-back {
+    transform: rotateY(180deg);
+    font-size: 14px;
+    overflow-y: auto;
+}
+.hint {
+    background: rgba(255,0,0,0.1);
+    padding: 10px;
+    margin: 10px;
+    display: none;
+}
+.timer {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: rgba(255,0,0,0.2);
+    color: black;
+    padding: 5px 10px;
+    font-weight: bold;
+}
+.hidden {
+    display: none;
+}
+</style>
+</head>
+<body>
+<div class="timer" id="timer">00:00:00</div>
+<div class="container" id="page"></div>
+
+<script>
+let currentPage = 1;
+let startTime = Date.now();
+
+function updateTimer() {
+    let now = Date.now();
+    let diff = Math.floor((now - startTime) / 1000);
+    let h = String(Math.floor(diff / 3600)).padStart(2, '0');
+    let m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+    let s = String(diff % 60).padStart(2, '0');
+    document.getElementById("timer").textContent = `${h}:${m}:${s}`;
+}
+setInterval(updateTimer, 1000);
+
+function showPage(n) {
+    currentPage = n;
+    const page = document.getElementById("page");
+    page.innerHTML = "";
+    if (n === 1) {
+        page.innerHTML = `<p>Сегодня у тебя особенный день. Надеемся ты сможешь провести его лучше в небольшом виртуальном путешествии-квесте.</p>
+        <button onclick="showPage(2)">Начать путешествие</button>
+        <div style="background:rgba(255,0,0,0.1);">Внимание, сайт сделан на скорую руку, поэтому могут быть какие-то ошибки. Если будут вопросы обращайтесь к J-u</div>`;
+    } else if (n === 2) {
+        page.innerHTML = `<p>Настал долгожданный день встречи. Рано с утра, ты приехала в Сеул и заселилась в отеле. Посыпав до 14 дня и восполнив силы после путешествия, ты уже была полна сил праздновать свой день рождения. На часах было 15, когда ты зашла в зарезервированную караоке комнату, где вы условились с подругами встретится и начать праздник. На удивление подруг ты там не увидела. На диванах лежали лишь их вещи свидетельствовавшие, что они недавно были тут. На столе бросаясь в глаза лежал белый конверт</p>
+        <button onclick="document.getElementById('card2').classList.remove('hidden')">Открыть конверт</button>
+        <div id="card2" class="hidden"><div><div style="background:rgba(255, 255, 255);"><br><br>Привет! Если ты хочешь спасти своих подруг, тебе придется найти их.<br> Игра начинается тут. У тебя 24 часа.<br><br><br></div></div>
+        <button onclick="showPage(3)">Искать подруг</button></div>`;
+
+    } else if (n === 3) {
+        page.innerHTML = `<p>Своих подруг бросать в беде ты не собиралась. Поэтому огляделась и начала искать подсказки в комнате.</p>
+		
+        <p>Чтоб двигаться дальше введи кодовое слово:</p>
+        <input type="text" id="input3"><button onclick="checkAnswer('stage', 4, 'input3')">Далее</button>
+        <div id="cards3"></div>
+		<audio class="hidden" id="chamberAudio" controls autoplay>
+		<source src="music.mp3" type="audio/mpeg">
+        <div><button onclick="toggleHint('hint3a')">?</button><button onclick="toggleHint('hint3b')">?</button></div>
+        <div id="hint3a" class="hint">Поищи выделенные буквы в предметах</div>
+        <div id="hint3b" class="hint">Ответ: stage</div>`;
+        addCards(3);
+    } else if (n === 4) {
+        page.innerHTML = `<p>Что же дальше делать с кодовым словом которые ты получила. Ты огляделась по сторонам и стала изучать комнату. <br><br>Выбери предмет который ты детальнее должна осмотреть. Выбрать можно только один предмет.</p>
+        <p>Введи название предмета:</p>
+        <input type="text" id="input4"><button onclick="checkAnswer('Диван', 5, 'input4')">Далее</button>
+        <div id="cards4"></div>
+        <div><button onclick="toggleHint('hint4a')">?</button><button onclick="toggleHint('hint4b')">?</button></div>
+        <div id="hint4a" class="hint">Кажется под одним с предметов что-то интересное</div>
+        <div id="hint4b" class="hint">Ответ: Диван</div>`;
+        addCards(4);
+			
+    } else if (n === 5) {
+        page.innerHTML = `<p>Ты осмотрела коробку. Приглядевшись ты увидела по следам грязи что раньше была наклейка с буквой "g" и образовывалось слово stage. Мысленно порадовавшись, что ты на правильном пути, ты попробовала открыть коробку с кодовым замком. На коробке были символы "(^^)</p>
+        <p>Введите код чтоб открыть коробку:</p>
+        <input type="number" id="input5"><button onclick="checkAnswer('9660', 6, 'input5')">Открыть</button>
+		<div></div>
+        <div id="card5" class="card"><div class="card-inner"><div class="card-front">📦</div>
+		<div class="card-back">📦✍️🎶🪞🏃‍♂️🏢<br>Место, где каждый шаг — репетиция. Найди его</div></div></div>
+        <div><button onclick="toggleHint('hint5a')">?</button><button onclick="toggleHint('hint5b')">?</button></div>
+        <div id="hint5a" class="hint">Кажется тебе нужна клавиатура от компьютера или ноутбука</div>
+        <div id="hint5b" class="hint">Ответ: 9660</div>`;
+		
+		
+		
+    } else if (n === 6) {
+        page.innerHTML = `<p>В коробке была записка. "Место, где каждый шаг — репетиция. Найди его".</p> 
+		
+		<div>Понятное дело, тебе намекали, что нужно идти в комнату репетиций HYBE. Вот только как попасть туда ты не знала. В раздумьях ты ходила взад и вперед за зданием в маленьком парке пока случайно не натолкнулась на парня в маске и кепке. Кепка слетела. Парень стал извиняться. Смотря на эти большие щенячьи глаза ты узнаешь Джейка участника ENHYPEN. Раз уж удача тебе улыбнулась, ты упрашиваешь его провести тебя в здание. Джейк не может отказать такой красивой девушке как ты и соглашается. Теперь тебе предстоит найти нужный зал с практикой. <br><br>Когда ты заходишь в здание тебе приходит смс от неизвестного номера с подсказкой - номером комнаты для практик.</div>
+		<button onclick="document.getElementById('card0').classList.remove('hidden')">Посмотреть смс</button>
+        <div id="card0" class="hidden"><div><div style="background:rgba(255, 255, 255);"><br><br>Номер комнаты = X+(Z*2)<br><br><br></div></div>
+		
+		
+		
+        <p>Введите номер комнеты:</p>
+        <input type="number" id="input6"><button onclick="checkAnswer('4065', 7, 'input6')">Далее</button>
+        <div><button onclick="toggleHint('hint6a')">?</button><button onclick="toggleHint('hint6b')">?</button></div>
+        <div id="hint6a" class="hint">Где-то уже встречались X и Y. Поищи на других страницах. Для этого придется заново пройти их</div>
+        <div id="hint6b" class="hint">Ответ: 4065</div>`;
+    } else if (n === 7) {
+        page.innerHTML = `<p>Немного в неловкой тишине с Джейком ты поднялась в нужную комнату для практик. Зайдя в нее Джейк включил свет. Вы огляделись. Телевизор был включен.</p>
+		<button onclick="document.getElementById('card10').classList.remove('hidden')">Прочитать что было на экране</button>
+        <div id="card10" class="hidden"><div><div style="background:rgba(255, 255, 255);"><br><br>Ты слышала звук. У звука есть название. Номер в названии. Номер зеркала<br><br><br></div></div>
+        <p>Введите номер зеркала:</p>
+        <input type="number" id="input7"><button onclick="checkAnswer('5', 8, 'input7')">Далее</button>
+        <div><button onclick="toggleHint('hint7a')">?</button><button onclick="toggleHint('hint7b')">?</button></div>
+        <div id="hint7a" class="hint">Ты уже слышала кусочек песни. Какая цифра есть в названии?</div>
+        <div id="hint7b" class="hint">Ответ: 5</div>`;
+    } else if (n === 8) {
+        page.innerHTML = `<p>Ты подошла к зеркалу у которого снизу была цифра 5. Нагнувшись ты увидела записку с надписью.</p>
+        <button onclick="document.getElementById('note8').classList.remove('hidden')">Посмотреть что написано</button>
+        <div id="note8" class="hidden">Ввд н плт вс чсл дн ржднй пт пдрг.</div>
+        <p>Возьми пульт и введи на нем число:</p>
+        <input type="number" id="input8"><button onclick="checkAnswer('27132131', 9, 'input8')">Далее</button>
+        <div><button onclick="toggleHint('hint8a')">?</button><button onclick="toggleHint('hint8b')">?</button></div>
+        <div id="hint8a" class="hint">Кажется не хватает гласных букв</div>
+        <div id="hint8b" class="hint">Ответ: 27132131</div>`;
+    } else if (n === 9) {
+        page.innerHTML = `<p>Потайные зеркало разделилось на две половины...</p>
+        <video controls width="400"><source src="happy.mp4" type="video/mp4">Ваш браузер не поддерживает видео.</video>
+        <p>Надеюсь тебе понравилось такое поздравление! С любовью Юля, Маша, Жасмин, Яна, Настя!❤️</p>`;
+    }
+}
+
+function checkAnswer(correct, nextPage, inputId) {
+    const val = document.getElementById(inputId).value.trim();
+    if (val.toLowerCase() === correct.toLowerCase()) {
+        showPage(nextPage);
+    } else {
+        alert("Неправильный ответ. Попробуй ещё.");
+    }
+}
+
+function toggleHint(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === "none" ? "block" : "none";
+}
+
+function addCards(pageNum) {
+    const cards = {
+        3: [
+            ["💄", "Помада Бренда 'Under Sofa'"],
+            ["🧢", "Бесболка с надписью HYBE"],
+            ["📱", "Телефон. Отображается сообщение: 'Вещи громче слова. Найдти то, что не поет, но знает текст.'"],
+            ["📓", "Red heartS, red hearTs, that's what I'm on, yeAh. Come Give me somEthin' I can feel, oh-oh-oh"],
+            ["🎤", "Микрофон. На микрофоне наклейка с цифрой 7"],
+            ["🎧", "Наушникики Яны. В наушниках играет музыка"]
+        ],
+        4: [
+            ["🖼", "Плакат. На плакате изображена айдол группа. Написано ENHYPEN"],
+            ["🎁", "Подарок. Внутри записка: 'X - кол-во участников айденд, Z - год выпуска лихорадочной песни энхайпен'"],
+            ["🛋", "Диван. Под диваном железная коробка с надписью sta_e"],
+            ["🪑", "Стул. Просто стул с сердечками"]
+        ]
+    };
+    const container = document.getElementById("cards" + pageNum);
+    cards[pageNum].forEach(([emoji, text], i) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.onclick = () => card.classList.toggle("flipped");
+        card.innerHTML = `<div class="card-inner"><div class="card-front">${emoji}</div><div class="card-back">${text}</div></div>`;
+        container.appendChild(card);
+    });
+}
+
+showPage(1);
+</script>
+</body>
+</html>
